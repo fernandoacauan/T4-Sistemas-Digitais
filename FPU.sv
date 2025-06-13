@@ -50,7 +50,7 @@ always @(posedge m_clk)
       m_statusOut <= EXACT;
     end
 
-    if(m_opA[31] ^ m_opB[31]) // Vai ser uma soma pq ´e o mesmo sinal
+    if(m_opA[31] ^ m_opB[31]) // Vai ser uma soma pq ï¿½e o mesmo sinal
     begin
        Somar(m_opA, m_opB);
     end 
