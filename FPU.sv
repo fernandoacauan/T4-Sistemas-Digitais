@@ -1,8 +1,15 @@
-typedef enum bit [3:0] { EXACT, OVEFLOW, UNDERFLOW, INEXACT } eStatus;
+/********|********|********|********|********|********|********|********/
+/*                      TRABALHO IV SD                                 */
+/* File:   FPU.sv                                                      */
+/* Author: Fernando Acauan                                             */
+/*                                                                     */
+/********|********|********|********|********|********|********|********/
+
+typedef enum bit [3:0] { EXACT, OVEFLOW, UNDERFLOW, INEXACT } g_eStatus;
 
 /********|********|********|********|********|********|********|********/
 /*                                                                     */
-/*                           CFPU                                      */
+/*                           FPU                                       */
 /*                                                                     */
 /********|********|********|********|********|********|********|********/
 
@@ -13,20 +20,31 @@ module CFpu
   input  logic          m_reset,
   input  logic          m_clk,
   output logic  [31:0]  m_dataOut,
-  output eStatus        m_statusOut
+  output g_eStatus      m_statusOut
 );
 
 /********|********|********|********|********|********|********|********/
 
 /* (-1)^s + 1f . 2^e-127 */
 function bit [31:0] Somar(input logic [31:0] opA, input logic [31:0] opB);
-  static int expDiff = opA[30:20] - opB[30:20]; 
-  if(opA[30:20] > opB[30:20])
-  begin
-      
+  int mantA = opA[19:0];
+  int mantB = opB[19:0];
+  int resultadoExp[10:0];
+  if(opA[30:20] > opB[30:20]) begin
+    mantB = mantB >> (opA[30:20] - opB[30:20]);
+    resultadoExp = opA[30:20];
+  end else begin
+    mantA = mantA >> (opA[30:20] - opB[30:20]);
+    resultadoExp = opB[30:20];
   end
-  
-  
+
+  int somaMant = mantA + mantB;
+
+  if(somaMant[20]) begin 
+      somaMant = somaMant >> 1;
+  end
+
+  return 0;
 endfunction
 
 /********|********|********|********|********|********|********|********/
@@ -50,14 +68,14 @@ always @(posedge m_clk)
       m_statusOut <= EXACT;
     end
 
-    if(m_opA[31] ^ m_opB[31]) // Vai ser uma soma pq �e o mesmo sinal
+    if(m_opA[31] == m_opB[31]) // Vai ser uma soma pq �e o mesmo sinal
     begin
-       Somar(m_opA, m_opB);
-    end 
-    else 
-    begin
-       Diminuir(m_opA, m_opB);
+       m_dataOut <= Somar(m_opA, m_opB);
+    end else begin
+       m_dataOut <= Diminuir(m_opA, m_opB);
     end
 end
 
 endmodule
+
+/********|********|********|********|********|********|********|********/
