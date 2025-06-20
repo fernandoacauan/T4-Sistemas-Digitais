@@ -45,7 +45,7 @@ function automatic logic [31:0] Somar(input logic [31:0] opA, input logic [31:0]
   flag = 0;
 
   if (expA > expB) begin
-    shift = expA - expB;
+    shift = expA - expB; // ve quantos shift precisa pro menor expoente
 
     for (int i = 0; i < shift; i++) begin
       if (mantB[i]) flag = 1;
@@ -67,10 +67,11 @@ function automatic logic [31:0] Somar(input logic [31:0] opA, input logic [31:0]
 
   somaMant = mantA + mantB;
 
+  // ve se tem carry out
   if (somaMant[20]) begin
-    if (somaMant[0]) flag = 1;
-    somaMant     = somaMant >> 1;
-    resultadoExp = resultadoExp + 1;
+    if (somaMant[0]) flag = 1; // flag pra dizer que teve perca de precisao
+    somaMant     = somaMant >> 1; // tem que corrigir a cagad* dando shift pra direita
+    resultadoExp = resultadoExp + 1; // corrige o expoente ja que teve que fazer o shift
   end
 
   return {signA, resultadoExp[10:0], somaMant[19:0]};
@@ -119,13 +120,13 @@ function automatic logic [31:0] Diminuir(input logic [31:0] opA, input logic [31
   resultadoSign = signA;
 
   if (resultadoMant < 0) begin
-    resultadoMant = -resultadoMant;
-    resultadoSign = ~resultadoSign;
+    resultadoMant = -resultadoMant; // deixa a mantissa positiva
+    resultadoSign = ~resultadoSign; // ajusta o sinal
   end
 
   while ((resultadoMant[20] == 0) && (resultadoMant != 0) && (resultadoExp > 0)) begin
-    if (resultadoMant[19] == 1) flag = 1; 
-    resultadoMant = resultadoMant << 1;
+    if (resultadoMant[19] == 1) flag = 1; // perda de precisao (bit perdido no shift left)
+    resultadoMant = resultadoMant << 1; // normaliza a esquerda para restaurar o msb
     resultadoExp  = resultadoExp - 1;
   end
 
@@ -144,6 +145,7 @@ begin
     logic flag;
     logic [10:0] expResultado;
 
+    // se os sinais sao iguais entao vai ter uma soma
     if (m_opA[31] == m_opB[31]) begin
       resultado = Somar(m_opA, m_opB, flag);
     end else begin
