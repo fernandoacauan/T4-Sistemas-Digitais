@@ -1,12 +1,16 @@
 /********|********|********|********|********|********|********|********/
-/*                      TRABALHO IV SD                                 */
+/*                        TRABALHO IV SD                               */
 /* File:   FPU.sv                                                      */
 /* Author: Fernando Acauan                                             */
 /*                                                                     */
 /********|********|********|********|********|********|********|********/
-
-typedef enum bit [3:0] { EXACT, OVEFLOW, UNDERFLOW, INEXACT } g_eStatus;
-
+/*                        FORMULA                                      */
+/* X = ( 8 + ( 2 + 4 + 1 + 0 + 3 + 3 + 1 + 4 + 1 ) % 4 ) = 11          */
+/* Y = 31 - 11(X) = 20                                                 */
+/*                                                                     */
+/********|********|********|********|********|********|********|********/
+import FPU_types::*;
+`timescale 1ns/1ps
 /********|********|********|********|********|********|********|********/
 /*                                                                     */
 /*                           FPU                                       */
@@ -25,57 +29,141 @@ module CFpu
 
 /********|********|********|********|********|********|********|********/
 
-/* (-1)^s + 1f . 2^e-127 */
-function bit [31:0] Somar(input logic [31:0] opA, input logic [31:0] opB);
-  int mantA = opA[19:0];
-  int mantB = opB[19:0];
-  int resultadoExp[10:0];
-  if(opA[30:20] > opB[30:20]) begin
-    mantB = mantB >> (opA[30:20] - opB[30:20]);
-    resultadoExp = opA[30:20];
+function automatic logic [31:0] Somar(input logic [31:0] opA, input logic [31:0] opB, output logic flag);
+  logic signed [10:0] expA, expB, resultadoExp;
+  logic        [19:0] mantA, mantB;
+  logic        [20:0] somaMant;
+  logic               signA, signB;
+  logic signed [10:0] shift;
+
+  signA = opA[31];
+  signB = opB[31];
+  expA  = opA[30:20];
+  expB  = opB[30:20];
+  mantA = opA[19:0];
+  mantB = opB[19:0];
+  flag = 0;
+
+  if (expA > expB) begin
+    shift = expA - expB;
+
+    for (int i = 0; i < shift; i++) begin
+      if (mantB[i]) flag = 1;
+    end
+
+    mantB        = mantB >> shift;
+    resultadoExp = expA;
+
   end else begin
-    mantA = mantA >> (opA[30:20] - opB[30:20]);
-    resultadoExp = opB[30:20];
+    shift = expB - expA;
+
+    for (int i = 0; i < shift; i++) begin
+      if (mantA[i]) flag = 1;
+    end
+
+    mantA        = mantA >> shift;
+    resultadoExp = expB;
   end
 
-  int somaMant = mantA + mantB;
+  somaMant = mantA + mantB;
 
-  if(somaMant[20]) begin 
-      somaMant = somaMant >> 1;
+  if (somaMant[20]) begin
+    if (somaMant[0]) flag = 1;
+    somaMant     = somaMant >> 1;
+    resultadoExp = resultadoExp + 1;
   end
 
-  return 0;
+  return {signA, resultadoExp[10:0], somaMant[19:0]};
 endfunction
+
 
 /********|********|********|********|********|********|********|********/
 
-function bit [31:0] Diminuir(input logic [31:0] opA, input logic [31:0] opB);
+function automatic logic [31:0] Diminuir(input logic [31:0] opA, input logic [31:0] opB, output logic flag);
+  logic signed [10:0] expA, expB, resultadoExp;
+  logic        [19:0] mantA, mantB;
+  logic signed [20:0] resultadoMant;
+  logic               signA, signB, resultadoSign;
+  logic signed [10:0] shift;
 
-endfunction
+  signA = opA[31];
+  signB = opB[31];
+  expA  = opA[30:20];
+  expB  = opB[30:20];
+  mantA = opA[19:0];
+  mantB = opB[19:0];
+  flag = 0;
 
-/********|********|********|********|********|********|********|********/
+  if (expA > expB) begin
+    shift = expA - expB;
 
-function bit [31:0] Multiplicar(input logic [31:0] opA, input logic [31:0] opB);
+    for (int i = 0; i < shift; i++) begin
+      if (mantB[i]) flag = 1;
+    end
+
+    mantB        = mantB >> shift;
+    resultadoExp = expA;
+
+  end else begin
+    shift = expB - expA;
+
+    for (int i = 0; i < shift; i++) begin
+      if (mantA[i]) flag = 1;
+    end
+
+    mantA        = mantA >> shift;
+    resultadoExp = expB;
+  end
+
+  resultadoMant = mantA - mantB;
+  resultadoSign = signA;
+
+  if (resultadoMant < 0) begin
+    resultadoMant = -resultadoMant;
+    resultadoSign = ~resultadoSign;
+  end
+
+  while ((resultadoMant[20] == 0) && (resultadoMant != 0) && (resultadoExp > 0)) begin
+    if (resultadoMant[19] == 1) flag = 1; 
+    resultadoMant = resultadoMant << 1;
+    resultadoExp  = resultadoExp - 1;
+  end
+
+  return {resultadoSign, resultadoExp[10:0], resultadoMant[19:0]};
 endfunction
 
 /********|********|********|********|********|********|********|********/
 
 always @(posedge m_clk)
- begin
-  if(!m_reset)
-    begin
-      m_dataOut <= 32'b0;
+begin
+  if (!m_reset) begin
+    m_dataOut   <= 32'b0;
+    m_statusOut <= EXACT;
+  end else begin
+    logic [31:0] resultado;
+    logic flag;
+    logic [10:0] expResultado;
+
+    if (m_opA[31] == m_opB[31]) begin
+      resultado = Somar(m_opA, m_opB, flag);
+    end else begin
+      resultado = Diminuir(m_opA, m_opB, flag);
+    end
+
+    m_dataOut <= resultado;
+    expResultado = resultado[30:20];
+
+    if (expResultado > 11'b11111111111) begin
+      m_statusOut <= OVERFLOW;
+    end else if (expResultado == 0) begin
+      m_statusOut <= UNDERFLOW;
+    end else if (flag) begin
+      m_statusOut <= INEXACT;
+    end else begin
       m_statusOut <= EXACT;
     end
-
-    if(m_opA[31] == m_opB[31]) // Vai ser uma soma pq �e o mesmo sinal
-    begin
-       m_dataOut <= Somar(m_opA, m_opB);
-    end else begin
-       m_dataOut <= Diminuir(m_opA, m_opB);
-    end
+  end
 end
-
 endmodule
 
 /********|********|********|********|********|********|********|********/

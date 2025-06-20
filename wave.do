@@ -1,0 +1,1 @@
+add wave -position end sim:/tb_CFpu/*
