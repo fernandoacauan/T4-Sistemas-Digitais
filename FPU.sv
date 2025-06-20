@@ -17,6 +17,9 @@ import FPU_types::*;
 /*                                                                     */
 /********|********|********|********|********|********|********|********/
 
+
+// Mudanças necessarias: Reset deixar assincrono, ver overflow e underflow
+
 module CFpu
 (
   input  logic  [31:0]  m_opA, // expoente com 11 bits e mantissa com 20
