@@ -88,5 +88,7 @@ A FPU foi implementada com sucesso, apenas com erro no teste 4, falhando em dete
 - O script `sim.do` compila os arquivos, inicia a simulação e carrega as ondas.
 
 ## Espaço Numérico Representável
-![Representavel](https://github.com/user-attachments/assets/14f9c4da-3ffa-4c7c-be7a-09d7c7b5e685)
+O maior numero representável é 1,9974368165 * 10^308
+O menor numero representavel é 2,472304287 * 10^-308
+![Representavel](https://github.com/user-attachments/assets/f0b2bbb6-6aa9-4c30-ab06-2b850fa2f394)
 
