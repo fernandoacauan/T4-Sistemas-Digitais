@@ -41,7 +41,7 @@ function automatic logic [31:0] Somar(input logic [31:0] opA, input logic [31:0]
   logic        [20:0] mantA, mantB, somaMant;
   logic        [21:0] soma_ext;
   logic               signA, signB;
-  int                 zeros_leading;  // os zeros desgracados
+  int                 zeros_leading;  // os zeros chatos
   localparam          BIAS = 1023;
   
   signA = opA[31];
