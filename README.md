@@ -71,7 +71,7 @@ O testbench contém 10 casos de teste:
 ![casoDez](https://github.com/user-attachments/assets/9a5afef9-d1f2-4cab-a88b-6acc18f857cd)
 
 ## Resultados Obtidos
-A FPU foi implementada com sucesso, apenas com erro no teste 5, falhando em detectar o overflow, interpretando como EXACT. O tratamento de status (EXACT, OVERFLOW, UNDERFLOW, INEXACT) funciona muito bem e foi pensado utilizando um enum. O projeto demonstra a correta manipulação do formato de ponto flutuante personalizado.
+A FPU foi implementada com sucesso, apenas com erro no teste 4, falhando em detectar o overflow, interpretando como EXACT. O tratamento de status (EXACT, OVERFLOW, UNDERFLOW, INEXACT) funciona muito bem e foi pensado utilizando um enum. O projeto demonstra a correta manipulação do formato de ponto flutuante personalizado.
 
 ## Requisitos
 - ModelSim (ou simulador compatível com SystemVerilog).
