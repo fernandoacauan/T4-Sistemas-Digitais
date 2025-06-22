@@ -87,3 +87,6 @@ A FPU foi implementada com sucesso, apenas com erro no teste 4, falhando em dete
 
 - O script `sim.do` compila os arquivos, inicia a simulação e carrega as ondas.
 
+## Espaço Numérico Representável
+![Representavel](https://github.com/user-attachments/assets/14f9c4da-3ffa-4c7c-be7a-09d7c7b5e685)
+
